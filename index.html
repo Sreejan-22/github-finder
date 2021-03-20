@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Github Finder</title>
+  </head>
+  <body>
+    <h1>Github Finder</h1>
+    <br /><br />
+    <div style="display: flex; justify-content: center; height: 2rem">
+      <input
+        type="text"
+        style="width: 50%; font-size: 1.3rem"
+        placeholder="Enter github username"
+        class="input-box"
+      />
+    </div>
+    <br /><br />
+    <div style="display: flex; justify-content: center; height: 2rem">
+      <button
+        type="button"
+        style="font-size: 1.2rem; cursor: pointer"
+        class="submit-button"
+      >
+        Submit
+      </button>
+    </div>
+    <br /><br /><br />
+    <div
+      class="user-info"
+      style="
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+      "
+    >
+      <div style="display: flex; flex-direction: column">
+        <div style="display: flex; justify-content: center">
+          <img
+            src=""
+            alt=""
+            class="user-img"
+            style="border-radius: 50%; height: 13rem; width: 13rem"
+          />
+        </div>
+        <div>
+          <h2 class="name" style="text-align: center"></h2>
+        </div>
+      </div>
+      <div>
+        <div class="bio" style="font-size: 1.5rem">
+          <h1>Bio</h1>
+          <p class="bio-text"></p>
+        </div>
+        <div class="github-stats" style="font-size: 1.7rem">
+          <h2 class="stats-header-text"></h2>
+          <div>
+            <span> Total number of public repositories: </span>
+            <span class="repo-count"></span>
+          </div>
+          <div>
+            <span> Total stars(in public repos): </span>
+            <span class="stars"></span>
+          </div>
+        </div>
+        <br />
+        <a href="" class="github-profile" style="text-decoration: none">
+          <button style="height: 2rem; font-size: 1.3rem; cursor: pointer">
+            Visit Github Profile
+          </button>
+        </a>
+      </div>
+    </div>
+
+    <script>
+      const userInfo = document.querySelector(".user-info");
+      userInfo.style.display = "none";
+      let input = document.querySelector(".input-box");
+
+      document
+        .querySelector(".submit-button")
+        .addEventListener("click", (e) => {
+          const username = input.value;
+          if (!username || username.length == 0) {
+            alert("username invalid!!");
+          }
+          let userData = {};
+          // get request to github api endpoint
+          fetch(`https://api.github.com/users/${username}`)
+            .then((res) => res.json())
+            .then((data) => {
+              userData = data;
+              if ("login" in userData && "id" in userData) {
+                // get the profile picture
+                const userImg = userData.avatar_url;
+                document
+                  .querySelector(".user-img")
+                  .setAttribute("src", userImg);
+
+                // get name
+                document.querySelector(".name").innerText = userData.name;
+
+                // get bio
+                const bio = userData.bio;
+                document.querySelector(
+                  "body > div.user-info > div:nth-child(2) > div.bio > p"
+                ).innerText = bio;
+
+                // github stats
+                // total number of public repositories
+                document.querySelector(".repo-count").innerText =
+                  userData.public_repos;
+
+                // github link
+                document
+                  .querySelector(".github-profile")
+                  .setAttribute("href", `https://www.github.com/${username}`);
+
+                // count total number of stars in the repositories
+                let stars = 0;
+                fetch(`https://api.github.com/users/${username}/repos`)
+                  .then((res) => res.json())
+                  .then((data) => {
+                    for (repo of data) {
+                      stars = stars + repo["stargazers_count"];
+                    }
+                  })
+                  .then(() => {
+                    document.querySelector(".stars").innerText = stars;
+                    userInfo.style.display = "flex";
+                  })
+                  .catch((err) => {
+                    console.log(err);
+                  });
+              } else {
+                if (message in userData) {
+                  if (message == "Not Found") {
+                    alert("Enter a valid username");
+                    window.location.reload();
+                  }
+                }
+              }
+            })
+            .catch((err) => {
+              console.log(err);
+              alert("an error occurred");
+            });
+        });
+    </script>
+  </body>
+</html>
